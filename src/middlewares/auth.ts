@@ -71,7 +71,6 @@ declare global {
 
 // Middleware to authenticate user and attach to request
 export const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
-  console.log("authenticateUser");
   try {
     const session = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers),

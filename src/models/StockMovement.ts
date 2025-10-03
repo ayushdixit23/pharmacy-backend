@@ -134,6 +134,22 @@ class StockMovement {
       return acc;
     }, {});
   }
+
+  static async findRecent(limit: number = 10): Promise<StockMovementRecord[]> {
+    return await db('stock_movements as sm')
+      .select(
+        'sm.*',
+        'p.name as product_name',
+        'p.barcode',
+        'b.batch_number',
+        'u.name as user_name'
+      )
+      .join('products as p', 'sm.product_id', 'p.id')
+      .leftJoin('batches as b', 'sm.batch_id', 'b.id')
+      .leftJoin('user as u', 'sm.user_id', 'u.id')
+      .orderBy('sm.created_at', 'desc')
+      .limit(limit);
+  }
 }
 
 export default StockMovement;
