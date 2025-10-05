@@ -1,14 +1,15 @@
 import nodemailer from 'nodemailer';
+import { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, SMTP_FROM } from '../utils/envConfig.js';
 
 // Create transporter for email sending
 const createTransporter = () => {
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+    host: SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(SMTP_PORT || '587'),
+    secure: SMTP_SECURE === 'true',
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: SMTP_USER,
+      pass: SMTP_PASS,
     },
   });
 };
@@ -25,7 +26,7 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: SMTP_FROM || SMTP_USER,
       to: options.sendTo,
       subject: options.subject,
       text: options.text,

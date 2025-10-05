@@ -17,12 +17,13 @@ export const auth = betterAuth({
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET as string,
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:8080",
+  trustedOrigins: ["http://localhost:3000", "http://localhost:8080"],
   user: {
     additionalFields: {
-      phoneNumber: { type: 'string', required: true },
-      pharmacyName: { type: 'string', required: true },
-      drugLicenseNumber: { type: 'string', required: true },
-      role: { type: 'string', required: true, defaultValue: 'PHARMACIST' },
+      role: { type: 'string', required: true, defaultValue: 'PHARMACIST', returned: true },
+      phoneNumber: { type: 'string', required: true, returned: false },
+      pharmacyName: { type: 'string', required: true, returned: false },
+      drugLicenseNumber: { type: 'string', required: true, returned: false },
     }
   },
   session: {
@@ -31,41 +32,41 @@ export const auth = betterAuth({
       maxAge: 5 * 60,
     },
     updateAge: 24 * 60 * 60,
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    expiresIn: 60 * 60 * 24 * 7,
   },
   rateLimit: {
     window: 10,
     max: 100,
   },
-  // emailVerification: {
-  //   autoSignInAfterVerification: true,
-  //   enabled: true,
-  //   sendVerificationEmail: async ({ user, url }) => {
-  //     const verificationUrl = new URL(url);
-  //     verificationUrl.searchParams.set("callbackURL", "/email-verification");
-  //     await sendEmail({
-  //       sendTo: user.email,
-  //       subject: "Verify your email",
-  //       text: `Click here to verify your email: ${verificationUrl.toString()}`,
-  //       html: `
-  //         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  //           <h2>Verify Your Email</h2>
-  //           <p>Hello ${user.name || 'User'},</p>
-  //           <p>Please click the link below to verify your email address:</p>
-  //           <a href="${verificationUrl.toString()}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email</a>
-  //           <p>If the button doesn't work, copy and paste this link into your browser:</p>
-  //           <p style="word-break: break-all; color: #666;">${verificationUrl.toString()}</p>
-  //           <p>This link will expire in 24 hours.</p>
-  //         </div>
-  //       `,
-  //     });
-  //   },
-  //   sendOnSignUp: true
-  // },
+  emailVerification: {
+    autoSignInAfterVerification: true,
+    enabled: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      const verificationUrl = new URL(url);
+      verificationUrl.searchParams.set("callbackURL", "http://localhost:3000/email-verification");
+      await sendEmail({
+        sendTo: user.email,
+        subject: "Verify your email",
+        text: `Click here to verify your email: ${verificationUrl.toString()}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Verify Your Email</h2>
+            <p>Hello ${user.name || 'User'},</p>
+            <p>Please click the link below to verify your email address:</p>
+            <a href="${verificationUrl.toString()}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email</a>
+            <p>If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #666;">${verificationUrl.toString()}</p>
+            <p>This link will expire in 24 hours.</p>
+          </div>
+        `,
+      });
+    },
+    sendOnSignUp: true
+  },
   emailAndPassword: {
     enabled: true,
     disableSignUp: false,
-    // requireEmailVerification: true,
+    requireEmailVerification: true,
     minPasswordLength: 8,
     maxPasswordLength: 128,
     autoSignIn: true,
