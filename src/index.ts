@@ -62,15 +62,7 @@ app.use(
   })
 );
 
-// Better Auth handler (must come after CORS)
-app.all("/api/auth/{*any}", (req: any, res: any) => {
-  return toNodeHandler(auth)(req, res);
-})
-
-// Test endpoint
-app.get("/api/auth/test", (req: any, res: any) => {
-  res.json({ message: "Backend is working", timestamp: new Date().toISOString() });
-});
+app.all("/api/auth/{*splat}", toNodeHandler(auth));
 
 // Body parsing middleware
 app.use(express.json());
