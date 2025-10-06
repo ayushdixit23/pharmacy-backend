@@ -4,16 +4,11 @@ import StockMovement from '../models/StockMovement.js';
 import { 
   AuthenticatedRequest, 
   ApiResponse,
-  Product as ProductType,
-  Batch as BatchType,
-  StockMovement as StockMovementType
 } from '../types.js';
 
 // Get inventory stock summary
 export const getInventoryStock = async (req: AuthenticatedRequest, res: any): Promise<void> => {
   try {
-    const { productId, lowStock, expiringSoon } = req.query;
-
     // Get all products with their batches
     const products = await Product.findAll();
     

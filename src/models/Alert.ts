@@ -1,4 +1,5 @@
 import db from '../db/knex.js';
+import { v4 as uuidv4 } from 'uuid';
 
 interface AlertData {
   product_id?: string;
@@ -54,8 +55,13 @@ interface ExpiryAlert extends AlertRecord {
 
 class Alert {
   static async create(alertData: AlertData): Promise<AlertRecord> {
+    const alertWithId = {
+      id: uuidv4(),
+      ...alertData
+    };
+    
     const [alert] = await db('alerts')
-      .insert(alertData)
+      .insert(alertWithId)
       .returning('*');
     return alert;
   }

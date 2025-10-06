@@ -1,4 +1,3 @@
-import knex from 'knex';
 import type { Knex } from 'knex';
 
 export async function up(knexInstance: Knex): Promise<void> {

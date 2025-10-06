@@ -71,18 +71,20 @@ export const auth = betterAuth({
     maxPasswordLength: 128,
     autoSignIn: true,
     sendResetPassword: async ({ user, url, token }, request) => {
+      const resetUrl = new URL(url);
+      resetUrl.searchParams.set("callbackURL", "http://localhost:3000/reset-password");
       await sendEmail({
         sendTo: user.email,
         subject: "Reset your password",
-        text: `Click the link to reset your password: ${url}`,
+        text: `Click the link to reset your password: ${resetUrl.toString()}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Reset Your Password</h2>
             <p>Hello ${user.name || 'User'},</p>
             <p>You requested to reset your password. Click the link below to reset it:</p>
-            <a href="${url}" style="background-color: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+            <a href="${resetUrl.toString()}" style="background-color: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
             <p>If the button doesn't work, copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; color: #666;">${url}</p>
+            <p style="word-break: break-all; color: #666;">${resetUrl.toString()}</p>
             <p>This link will expire in 1 hour.</p>
             <p>If you didn't request this password reset, please ignore this email.</p>
           </div>
