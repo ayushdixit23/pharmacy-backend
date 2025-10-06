@@ -20,10 +20,10 @@ export const auth = betterAuth({
   trustedOrigins: ["http://localhost:3000", "http://localhost:8080"],
   user: {
     additionalFields: {
-      role: { type: 'string', required: true, defaultValue: 'PHARMACIST', returned: true },
-      phoneNumber: { type: 'string', required: true, returned: false },
-      pharmacyName: { type: 'string', required: true, returned: false },
-      drugLicenseNumber: { type: 'string', required: true, returned: false },
+      role: { type: 'string', required: true, defaultValue: 'PHARMACIST' },
+      phoneNumber: { type: 'string', required: true },
+      pharmacyName: { type: 'string', required: true },
+      drugLicenseNumber: { type: 'string', required: true },
     }
   },
   session: {
