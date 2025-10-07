@@ -17,6 +17,7 @@ import batchRoutes from './routes/batches.js';
 import barcodeRoutes from './routes/barcode.js';
 import alertRoutes from './routes/alerts.js';
 import inventoryRoutes from './routes/inventory.js';
+import prescriptionRoutes from './routes/prescriptions.js';
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -110,6 +111,7 @@ app.use("/api/batches", batchRoutes);
 app.use("/api/barcode", barcodeRoutes);
 app.use("/api/alerts", alertRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/prescriptions", prescriptionRoutes);
 
 // 404 Handler for non-existent routes (must come after routes)
 app.use((_, res) => {
