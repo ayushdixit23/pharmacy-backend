@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { Pool } from "pg";
 import { DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT, DB_SSL } from "./utils/envConfig.js";
 import { sendEmail } from "./lib/send-mail.js";
+import { twoFactor } from "better-auth/plugins";
 
 // Create PostgreSQL connection pool
 const pool = new Pool({
@@ -14,8 +15,52 @@ const pool = new Pool({
 });
 
 export const auth = betterAuth({
+  appName: "Pharmacy Management System",
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET as string,
+  plugins: [
+    twoFactor({
+      otpOptions: {
+        async sendOTP({ user, otp }) {
+          console.log('🔐 sendOTP called for user:', user.email, 'with OTP:', otp);
+          try {
+            await sendEmail({
+              sendTo: user.email,
+              subject: "Your Two-Factor Authentication Code",
+              text: `Your verification code is: ${otp}`,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <div style="background-color: #f8f9fa; border-radius: 8px; padding: 30px; text-align: center;">
+                    <h2 style="color: #333; margin-bottom: 20px;">Two-Factor Authentication</h2>
+                    <p style="color: #666; margin-bottom: 20px;">Hello ${user.name || 'User'},</p>
+                    <p style="color: #666; margin-bottom: 30px;">Use the following code to complete your two-factor authentication:</p>
+                    
+                    <div style="background-color: #0f766e; color: white; font-size: 32px; font-weight: bold; padding: 20px; border-radius: 8px; letter-spacing: 4px; margin: 20px 0;">
+                      ${otp}
+                    </div>
+                    
+                    <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                      This code will expire in 10 minutes for security reasons.
+                    </p>
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                      <p style="color: #999; font-size: 12px;">
+                        If you didn't request this code, please ignore this email or contact support if you have concerns.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              `,
+            });
+            console.log('✅ OTP email sent successfully to:', user.email);
+          } catch (error) {
+            console.error('❌ Failed to send OTP email:', error);
+            throw error;
+          }
+        },
+      },
+    })
+  ],
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:8080",
   trustedOrigins: ["http://localhost:3000", "http://localhost:8080"],
   user: {
