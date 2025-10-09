@@ -1,5 +1,6 @@
 import { Knex } from 'knex';
 import { randomUUID } from 'crypto';
+import db from '../db/knex.js';
 
 export interface Prescription {
   id: string;
@@ -540,6 +541,12 @@ export class PrescriptionModel {
       console.error('Error fetching prescription stats:', error);
       throw error;
     }
+  }
+
+  async updateMedication(medicationId: string, updateData: Partial<PrescriptionMedication>): Promise<void> {
+    await db('prescription_medications')
+      .where({ id: medicationId })
+      .update({ ...updateData, updated_at: new Date() });
   }
 
   private generateId(): string {

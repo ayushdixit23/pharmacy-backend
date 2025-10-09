@@ -177,6 +177,7 @@ export interface UpdateStockByBarcodeRequest {
   quantity: number;
   movement_type: 'IN' | 'OUT' | 'ADJUSTMENT';
   reason?: string;
+  batch_id?: string;
 }
 
 export interface BulkScanRequest {
@@ -193,6 +194,9 @@ export interface CreateBatchRequest {
   initial_quantity: number;
   cost_price: number;
   selling_price: number;
+  lot_number?: string;
+  manufacturing_date?: string;
+  notes?: string;
 }
 
 export interface UpdateBatchRequest {
@@ -224,6 +228,7 @@ export interface CreateSupplierRequest {
   address: string;
   gst_number: string;
   contact_person: string;
+  license_number?: string;
 }
 
 export interface UpdateSupplierRequest {

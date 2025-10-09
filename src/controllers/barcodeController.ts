@@ -14,6 +14,42 @@ import {
   BulkScanRequest
 } from '../types.js';
 
+// Type conversion helper functions
+const convertProductRecordToProduct = (record: any): ProductType => ({
+  id: record.id,
+  name: record.name,
+  generic_name: record.generic_name,
+  description: record.description,
+  image_url: record.image_url,
+  category: record.category as 'OTC' | 'PRESCRIPTION' | 'SUPPLEMENTS' | 'MEDICAL_DEVICES' | 'COSMETICS' | 'OTHER',
+  manufacturer: record.manufacturer,
+  barcode: record.barcode,
+  qr_code: record.qr_code,
+  unit_price: record.price,
+  selling_price: record.price,
+  unit_of_measure: record.unit,
+  pack_size: undefined,
+  min_stock_level: record.min_stock_level,
+  max_stock_level: record.max_stock_level,
+  requires_prescription: record.category === 'PRESCRIPTION',
+  supplier_id: record.supplier_id,
+  is_active: record.is_active,
+  created_at: record.created_at,
+  updated_at: record.updated_at
+});
+
+const convertStockLevelToStockInfo = (stock: any): StockInfo => ({
+  current_stock: stock.current_stock,
+  reserved_stock: stock.reserved_stock,
+  min_stock_level: stock.min_stock_level,
+  max_stock_level: stock.max_stock_level
+});
+
+const convertStockMovementRecordToStockMovement = (record: any): StockMovementType => ({
+  ...record,
+  movement_type: record.movement_type as 'IN' | 'OUT' | 'ADJUSTMENT' | 'TRANSFER'
+});
+
 // Scan barcode and get product information
 export const scanBarcode = async (req: AuthenticatedRequest, res: any): Promise<void> => {
   try {
@@ -45,10 +81,10 @@ export const scanBarcode = async (req: AuthenticatedRequest, res: any): Promise<
     }> = {
       success: true,
       data: {
-        product,
-        stock_info: stockInfo,
+        product: convertProductRecordToProduct(product),
+        stock_info: convertStockLevelToStockInfo(stockInfo!),
         batches,
-        recent_movements: recentMovements
+        recent_movements: recentMovements.map(convertStockMovementRecordToStockMovement)
       }
     };
 
@@ -110,13 +146,12 @@ export const updateStockByBarcode = async (req: AuthenticatedRequest, res: any):
     }
 
     // Update stock
-    await Product.updateStock(product.id, null, newStock);
+    await Product.updateStock(product.id, '', newStock);
 
     // Create stock movement record
     await StockMovement.create({
-      id: uuidv4(),
       product_id: product.id,
-      batch_id: batch_id || null,
+      batch_id: batch_id || '',
       movement_type,
       quantity,
       reason: reason || 'Barcode scan update',
@@ -138,8 +173,8 @@ export const updateStockByBarcode = async (req: AuthenticatedRequest, res: any):
     }> = {
       success: true,
       data: {
-        product: updatedProduct,
-        stock_info: updatedStockInfo
+        product: convertProductRecordToProduct(updatedProduct!),
+        stock_info: convertStockLevelToStockInfo(updatedStockInfo!)
       },
       message: 'Stock updated successfully'
     };
@@ -183,7 +218,7 @@ export const generateBarcode = async (req: AuthenticatedRequest, res: any): Prom
     }> = {
       success: true,
       data: {
-        product: updatedProduct,
+        product: convertProductRecordToProduct(updatedProduct),
         barcode
       },
       message: 'Barcode generated successfully'
@@ -224,8 +259,8 @@ export const bulkScanBarcodes = async (req: AuthenticatedRequest, res: any): Pro
             return {
               barcode,
               found: true,
-              product,
-              stock_info: stockInfo
+              product: convertProductRecordToProduct(product),
+              stock_info: convertStockLevelToStockInfo(stockInfo!)
             };
           } else {
             return {

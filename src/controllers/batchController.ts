@@ -2,7 +2,6 @@ import Batch from '../models/Batch.js';
 import Product from '../models/Product.js';
 import StockMovement from '../models/StockMovement.js';
 import Alert from '../models/Alert.js';
-import { v4 as uuidv4 } from 'uuid';
 import { 
   AuthenticatedRequest, 
   ApiResponse, 
@@ -12,6 +11,28 @@ import {
   UpdateBatchQuantityRequest,
   StockMovement as StockMovementType
 } from '../types.js';
+
+// Type conversion helper functions
+const convertBatchRecordToBatch = (record: any): BatchType => ({
+  id: record.id,
+  batch_number: record.batch_number,
+  product_id: record.product_id,
+  supplier_id: record.supplier_id,
+  mfg_date: record.mfg_date,
+  expiry_date: record.expiry_date,
+  initial_quantity: record.initial_quantity,
+  current_quantity: record.current_quantity,
+  cost_price: record.cost_price,
+  selling_price: record.selling_price,
+  is_active: record.is_active,
+  created_at: record.created_at,
+  updated_at: record.updated_at
+});
+
+const convertStockMovementRecordToStockMovement = (record: any): StockMovementType => ({
+  ...record,
+  movement_type: record.movement_type as 'IN' | 'OUT' | 'ADJUSTMENT' | 'TRANSFER'
+});
 
 // Create a new batch
 export const createBatch = async (req: AuthenticatedRequest, res: any): Promise<void> => {
@@ -51,24 +72,21 @@ export const createBatch = async (req: AuthenticatedRequest, res: any): Promise<
     }
 
     const batchData = {
-      id: uuidv4(),
-      product_id,
       batch_number,
-      lot_number,
-      manufacturing_date,
-      expiry_date,
+      product_id,
+      supplier_id,
+      mfg_date: new Date(manufacturing_date!),
+      expiry_date: new Date(expiry_date),
       initial_quantity,
       current_quantity: initial_quantity,
       cost_price,
-      supplier_id,
-      notes
+      selling_price: cost_price // Default selling price to cost price
     };
 
     const batch = await Batch.create(batchData);
 
     // Create stock movement record
     await StockMovement.create({
-      id: uuidv4(),
       product_id,
       batch_id: batch.id,
       movement_type: 'IN',
@@ -85,7 +103,7 @@ export const createBatch = async (req: AuthenticatedRequest, res: any): Promise<
 
     const response: ApiResponse<BatchType> = {
       success: true,
-      data: batch,
+      data: convertBatchRecordToBatch(batch),
       message: 'Batch created successfully'
     };
 
@@ -109,7 +127,7 @@ export const getBatchesByProduct = async (req: AuthenticatedRequest, res: any): 
 
     const response: ApiResponse<BatchType[]> = {
       success: true,
-      data: batches
+      data: batches.map(convertBatchRecordToBatch)
     };
 
     res.json(response);
@@ -145,8 +163,8 @@ export const getBatchById = async (req: AuthenticatedRequest, res: any): Promise
     const response: ApiResponse<BatchType & { movements: StockMovementType[] }> = {
       success: true,
       data: {
-        ...batch,
-        movements
+        ...convertBatchRecordToBatch(batch),
+        movements: movements.map(convertStockMovementRecordToStockMovement)
       }
     };
 
@@ -178,11 +196,15 @@ export const updateBatch = async (req: AuthenticatedRequest, res: any): Promise<
       return;
     }
 
-    const updatedBatch = await Batch.update(id, updateData);
+    const updatedBatch = await Batch.update(id, {
+      ...updateData,
+      mfg_date: updateData.mfg_date ? new Date(updateData.mfg_date) : undefined,
+      expiry_date: updateData.expiry_date ? new Date(updateData.expiry_date) : undefined
+    });
 
     const response: ApiResponse<BatchType> = {
       success: true,
-      data: updatedBatch,
+      data: convertBatchRecordToBatch(updatedBatch),
       message: 'Batch updated successfully'
     };
 
@@ -249,7 +271,7 @@ export const getExpiringBatches = async (req: AuthenticatedRequest, res: any): P
 
     const response: ApiResponse<BatchType[]> = {
       success: true,
-      data: batches
+      data: batches.map(convertBatchRecordToBatch)
     };
 
     res.json(response);
@@ -271,7 +293,7 @@ export const getExpiredBatches = async (req: AuthenticatedRequest, res: any): Pr
 
     const response: ApiResponse<BatchType[]> = {
       success: true,
-      data: batches
+      data: batches.map(convertBatchRecordToBatch)
     };
 
     res.json(response);
@@ -310,7 +332,6 @@ export const updateBatchQuantity = async (req: AuthenticatedRequest, res: any): 
     // Create stock movement record
     if (quantityDifference !== 0) {
       await StockMovement.create({
-        id: uuidv4(),
         product_id: batch.product_id,
         batch_id: id,
         movement_type: quantityDifference > 0 ? 'IN' : 'OUT',
@@ -324,7 +345,7 @@ export const updateBatchQuantity = async (req: AuthenticatedRequest, res: any): 
 
     const response: ApiResponse<BatchType> = {
       success: true,
-      data: updatedBatch,
+      data: convertBatchRecordToBatch(updatedBatch!),
       message: 'Batch quantity updated successfully'
     };
 

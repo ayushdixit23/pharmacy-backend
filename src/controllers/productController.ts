@@ -14,6 +14,42 @@ import {
   StockMovement as StockMovementType
 } from '../types.js';
 
+// Type conversion helper functions
+const convertProductRecordToProduct = (record: any): ProductType => ({
+  id: record.id,
+  name: record.name,
+  generic_name: record.generic_name,
+  description: record.description,
+  image_url: record.image_url,
+  category: record.category as 'OTC' | 'PRESCRIPTION' | 'SUPPLEMENTS' | 'MEDICAL_DEVICES' | 'COSMETICS' | 'OTHER',
+  manufacturer: record.manufacturer,
+  barcode: record.barcode,
+  qr_code: record.qr_code,
+  unit_price: record.price,
+  selling_price: record.price,
+  unit_of_measure: record.unit,
+  pack_size: undefined,
+  min_stock_level: record.min_stock_level,
+  max_stock_level: record.max_stock_level,
+  requires_prescription: record.category === 'PRESCRIPTION',
+  supplier_id: record.supplier_id,
+  is_active: record.is_active,
+  created_at: record.created_at,
+  updated_at: record.updated_at
+});
+
+const convertStockLevelToStockInfo = (stock: any): StockInfo => ({
+  current_stock: stock.current_stock,
+  reserved_stock: stock.reserved_stock,
+  min_stock_level: stock.min_stock_level,
+  max_stock_level: stock.max_stock_level
+});
+
+const convertStockMovementRecordToStockMovement = (record: any): StockMovementType => ({
+  ...record,
+  movement_type: record.movement_type as 'IN' | 'OUT' | 'ADJUSTMENT' | 'TRANSFER'
+});
+
 // Create a new product
 export const createProduct = async (req: AuthenticatedRequest, res: any): Promise<void> => {
   try {
@@ -74,9 +110,9 @@ export const createProduct = async (req: AuthenticatedRequest, res: any): Promis
 
     const product = await Product.create(productData);
 
-    const response: ApiResponse<Product> = {
+    const response: ApiResponse<ProductType> = {
       success: true,
-      data: product,
+      data: convertProductRecordToProduct(product),
       message: 'Product created successfully'
     };
 
@@ -118,7 +154,7 @@ export const getProducts = async (req: AuthenticatedRequest, res: any): Promise<
 
     const response: ApiResponse<ProductType[]> = {
       success: true,
-      data: paginatedProducts,
+      data: paginatedProducts.map(convertProductRecordToProduct),
       pagination: {
         current_page: parseInt(page.toString()),
         per_page: parseInt(limit.toString()),
@@ -161,8 +197,8 @@ export const getProductById = async (req: AuthenticatedRequest, res: any): Promi
     const response: ApiResponse<ProductType & { stock_info: StockInfo; batches: BatchType[] }> = {
       success: true,
       data: {
-        ...product,
-        stock_info: stockInfo,
+        ...convertProductRecordToProduct(product),
+        stock_info: convertStockLevelToStockInfo(stockInfo!),
         batches
       }
     };
@@ -213,7 +249,7 @@ export const updateProduct = async (req: AuthenticatedRequest, res: any): Promis
 
     const response: ApiResponse<ProductType> = {
       success: true,
-      data: updatedProduct,
+      data: convertProductRecordToProduct(updatedProduct),
       message: 'Product updated successfully'
     };
 
@@ -285,8 +321,8 @@ export const getProductByBarcode = async (req: AuthenticatedRequest, res: any): 
     const response: ApiResponse<ProductType & { stock_info: StockInfo; batches: BatchType[] }> = {
       success: true,
       data: {
-        ...product,
-        stock_info: stockInfo,
+        ...convertProductRecordToProduct(product),
+        stock_info: convertStockLevelToStockInfo(stockInfo!),
         batches
       }
     };
@@ -318,7 +354,7 @@ export const getProductStockHistory = async (req: AuthenticatedRequest, res: any
     }> = {
       success: true,
       data: {
-        movements,
+        movements: movements.map(convertStockMovementRecordToStockMovement),
         summary
       }
     };

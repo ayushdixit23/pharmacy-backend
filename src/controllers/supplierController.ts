@@ -11,6 +11,30 @@ import {
   Product as ProductType
 } from '../types.js';
 
+// Type conversion helper function
+const convertProductRecordToProduct = (record: any): ProductType => ({
+  id: record.id,
+  name: record.name,
+  generic_name: record.generic_name,
+  description: record.description,
+  image_url: record.image_url,
+  category: record.category as 'OTC' | 'PRESCRIPTION' | 'SUPPLEMENTS' | 'MEDICAL_DEVICES' | 'COSMETICS' | 'OTHER',
+  manufacturer: record.manufacturer,
+  barcode: record.barcode,
+  qr_code: record.qr_code,
+  unit_price: record.price,
+  selling_price: record.price,
+  unit_of_measure: record.unit,
+  pack_size: undefined,
+  min_stock_level: record.min_stock_level,
+  max_stock_level: record.max_stock_level,
+  requires_prescription: record.category === 'PRESCRIPTION',
+  supplier_id: record.supplier_id,
+  is_active: record.is_active,
+  created_at: record.created_at,
+  updated_at: record.updated_at
+});
+
 // Create a new supplier
 export const createSupplier = async (req: AuthenticatedRequest, res: any): Promise<void> => {
   try {
@@ -20,6 +44,7 @@ export const createSupplier = async (req: AuthenticatedRequest, res: any): Promi
       email,
       phone,
       address,
+      gst_number,
       license_number
     } = req.body as CreateSupplierRequest;
 
@@ -30,7 +55,7 @@ export const createSupplier = async (req: AuthenticatedRequest, res: any): Promi
       email,
       phone,
       address,
-      license_number
+      gst_number
     };
 
     const supplier = await Supplier.create(supplierData);
@@ -222,18 +247,20 @@ export const getSupplierProducts = async (req: AuthenticatedRequest, res: any): 
     const products = await Product.findAll({ supplier_id: id });
     
     // Pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = pageNum * limitNum;
     const paginatedProducts = products.slice(startIndex, endIndex);
 
     const response: ApiResponse<ProductType[]> = {
       success: true,
-      data: paginatedProducts,
+      data: paginatedProducts.map(convertProductRecordToProduct),
       pagination: {
-        current_page: parseInt(page as string),
-        per_page: parseInt(limit as string),
+        current_page: pageNum,
+        per_page: limitNum,
         total: products.length,
-        total_pages: Math.ceil(products.length / limit)
+        total_pages: Math.ceil(products.length / limitNum)
       }
     };
 
@@ -264,7 +291,7 @@ export const getSupplierStats = async (req: AuthenticatedRequest, res: any): Pro
         db.raw('COUNT(*) as total_products'),
         db.raw('SUM(p.unit_price * pb.current_stock) as total_value')
       )
-      .leftJoin('product_branches as pb', function() {
+      .leftJoin('product_branches as pb', function(this: any) {
         this.on('pb.product_id', '=', 'p.id')
           .andOn('pb.is_active', '=', db.raw('true'));
       })

@@ -135,6 +135,11 @@ class Product {
         updated_at: new Date()
       });
   }
+
+  static async search(filters: any): Promise<{ products: ProductRecord[] }> {
+    const products = await this.findAll(filters);
+    return { products };
+  }
 }
 
 export default Product;

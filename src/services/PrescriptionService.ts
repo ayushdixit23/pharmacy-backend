@@ -1,6 +1,6 @@
 import { OCRResult, ExtractedMedication } from '../types.js';
-import { StockManagementService } from './StockManagementService.js';
-import  Product from '../models/Product.js';
+import StockManagementService from './StockManagementService.js';
+import Product from '../models/Product.js';
 import { PrescriptionModel } from '../models/Prescription.js';
 
 export class PrescriptionService {
@@ -82,7 +82,7 @@ export class PrescriptionService {
 
     // Check stock availability for each medication
     for (const med of dispenseData.medications) {
-      const stockAvailable = await this.stockService.checkStockAvailability(med.product_id, med.batch_id, med.quantity);
+      const stockAvailable = await StockManagementService.checkStockAvailability(med.product_id, med.batch_id, med.quantity);
       if (!stockAvailable) {
         throw new Error(`Insufficient stock for medication ${med.product_id}`);
       }
@@ -90,7 +90,7 @@ export class PrescriptionService {
 
     // Update stock movements
     for (const med of dispenseData.medications) {
-      await this.stockService.createStockMovement({
+      await StockManagementService.createStockMovement({
         product_id: med.product_id,
         batch_id: med.batch_id,
         movement_type: 'OUT',
@@ -146,13 +146,13 @@ export class PrescriptionService {
    * Search for products to match with prescription medications
    */
   async searchProductsForMedication(medicationName: string, dosage?: string): Promise<any[]> {
-    const products = await this.productModel.search({
+    const products = await Product.search({
       search: medicationName,
       category: 'PRESCRIPTION',
       limit: 10
     });
 
-    return products.products.map(product => ({
+    return products.products.map((product: any) => ({
       id: product.id,
       name: product.name,
       generic_name: product.generic_name,

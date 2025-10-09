@@ -179,10 +179,10 @@ export class StockAuditService {
       return acc;
     }, {} as Record<string, number>);
 
-    const mostActiveProduct = Object.keys(productCounts).reduce((a, b) => 
-      productCounts[a] > productCounts[b] ? a : b, 
-      Object.keys(productCounts)[0] || null
-    );
+    const productKeys = Object.keys(productCounts);
+    const mostActiveProduct = productKeys.length > 0 ? productKeys.reduce((a, b) => 
+      productCounts[a] > productCounts[b] ? a : b
+    ) : null;
 
     return {
       totalMovements: movements.length,
@@ -220,7 +220,7 @@ export class StockAuditService {
       ORDER BY ABS(discrepancy) DESC
     `);
 
-    return discrepancies.rows.map(row => ({
+    return discrepancies.rows.map((row: any) => ({
       productId: row.product_id,
       productName: row.product_name,
       calculatedStock: parseInt(row.calculated_stock),

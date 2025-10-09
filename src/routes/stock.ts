@@ -1,18 +1,18 @@
-import { Router } from 'express';
-import { authenticateToken } from '../middlewares/auth.js';
+import { Router, Response } from 'express';
+import { authenticateUser } from '../middlewares/auth.js';
 import StockManagementService from '../services/StockManagementService.js';
-import { tryCatch } from '../middlewares/tryCatch.js';
+import tryCatch from '../middlewares/tryCatch.js';
 import { AuthenticatedRequest } from '../types.js';
 
 const router = Router();
 
 // Apply authentication to all routes
-router.use(authenticateToken);
+router.use(authenticateUser);
 
 /**
  * Get stock summary for a product
  */
-router.get('/summary/:productId', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.get('/summary/:productId', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const { productId } = req.params;
   
   const stockSummary = await StockManagementService.getStockSummary(productId);
@@ -26,7 +26,7 @@ router.get('/summary/:productId', tryCatch(async (req: AuthenticatedRequest, res
 /**
  * Get available stock for a product
  */
-router.get('/available/:productId', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.get('/available/:productId', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const { productId } = req.params;
   const { branchId } = req.query;
   
@@ -44,7 +44,7 @@ router.get('/available/:productId', tryCatch(async (req: AuthenticatedRequest, r
 /**
  * Validate stock availability
  */
-router.post('/validate', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.post('/validate', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const { productId, quantity, batchId } = req.body;
   
   const validation = await StockManagementService.validateStockAvailability(
@@ -62,7 +62,7 @@ router.post('/validate', tryCatch(async (req: AuthenticatedRequest, res) => {
 /**
  * Reserve stock
  */
-router.post('/reserve', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.post('/reserve', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const { productId, batchId, quantity, reservationType, referenceId, expiresAt } = req.body;
   
   const reservation = await StockManagementService.reserveStock({
@@ -84,7 +84,7 @@ router.post('/reserve', tryCatch(async (req: AuthenticatedRequest, res) => {
 /**
  * Execute stock operation
  */
-router.post('/execute', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.post('/execute', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const { productId, batchId, quantity, operationType, reason, referenceId } = req.body;
   
   const operationId = await StockManagementService.executeStockOperation({
@@ -106,7 +106,7 @@ router.post('/execute', tryCatch(async (req: AuthenticatedRequest, res) => {
 /**
  * Release stock reservation
  */
-router.delete('/reserve/:reservationId', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.delete('/reserve/:reservationId', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const { reservationId } = req.params;
   
   await StockManagementService.releaseStockReservation(reservationId);
@@ -120,7 +120,7 @@ router.delete('/reserve/:reservationId', tryCatch(async (req: AuthenticatedReque
 /**
  * Get FIFO batches for a product
  */
-router.get('/fifo/:productId', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.get('/fifo/:productId', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const { productId } = req.params;
   const { quantity } = req.query;
   
@@ -138,7 +138,7 @@ router.get('/fifo/:productId', tryCatch(async (req: AuthenticatedRequest, res) =
 /**
  * Get stock movement history
  */
-router.get('/history', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.get('/history', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const { productId, batchId, movementType, dateFrom, dateTo, limit } = req.query;
   
   const history = await StockManagementService.getStockHistory({
@@ -159,7 +159,7 @@ router.get('/history', tryCatch(async (req: AuthenticatedRequest, res) => {
 /**
  * Get expiring batches
  */
-router.get('/expiring', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.get('/expiring', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const { days = 30 } = req.query;
   
   const expiringBatches = await StockManagementService.getExpiringBatches(
@@ -175,7 +175,7 @@ router.get('/expiring', tryCatch(async (req: AuthenticatedRequest, res) => {
 /**
  * Get low stock products
  */
-router.get('/low-stock', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.get('/low-stock', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const lowStockProducts = await StockManagementService.getLowStockProducts();
   
   res.json({
@@ -187,7 +187,7 @@ router.get('/low-stock', tryCatch(async (req: AuthenticatedRequest, res) => {
 /**
  * Get batch details
  */
-router.get('/batch/:batchId', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.get('/batch/:batchId', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const { batchId } = req.params;
   
   const batchDetails = await StockManagementService.getBatchDetails(batchId);
@@ -201,7 +201,7 @@ router.get('/batch/:batchId', tryCatch(async (req: AuthenticatedRequest, res) =>
 /**
  * Clean up expired reservations (admin endpoint)
  */
-router.post('/cleanup', tryCatch(async (req: AuthenticatedRequest, res) => {
+router.post('/cleanup', tryCatch(async (req: AuthenticatedRequest, res: Response) => {
   const cleanedCount = await StockManagementService.cleanupExpiredReservations();
   
   res.json({

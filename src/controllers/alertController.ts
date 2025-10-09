@@ -10,6 +10,16 @@ import {
   AlertFilters 
 } from '../types.js';
 
+// Type conversion helper functions
+const convertAlertRecordToAlert = (record: any): AlertType => ({
+  ...record,
+  alert_type: record.alert_type as 'LOW_STOCK' | 'EXPIRY_WARNING' | 'EXPIRED' | 'OUT_OF_STOCK',
+  status: record.status as 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED'
+});
+
+const convertAlertRecordsToAlerts = (records: any[]): AlertType[] => 
+  records.map(convertAlertRecordToAlert);
+
 // Get all alerts for a user
 export const getAlerts = async (req: AuthenticatedRequest, res: any): Promise<void> => {
   try {
@@ -18,11 +28,11 @@ export const getAlerts = async (req: AuthenticatedRequest, res: any): Promise<vo
 
     let alerts: AlertType[];
     if (alert_type === 'LOW_STOCK') {
-      alerts = await Alert.getLowStockAlerts();
+      alerts = convertAlertRecordsToAlerts(await Alert.getLowStockAlerts());
     } else if (alert_type === 'EXPIRY') {
-      alerts = await Alert.getExpiryAlerts();
+      alerts = convertAlertRecordsToAlerts(await Alert.getExpiryAlerts());
     } else {
-      alerts = await Alert.findByUserId(userId, status);
+      alerts = convertAlertRecordsToAlerts(await Alert.findByUserId(userId!, status));
     }
 
     const response: ApiResponse<AlertType[]> = {
@@ -59,7 +69,7 @@ export const getAlertById = async (req: AuthenticatedRequest, res: any): Promise
 
     const response: ApiResponse<AlertType> = {
       success: true,
-      data: alert
+      data: convertAlertRecordToAlert(alert)
     };
 
     res.json(response);
@@ -94,7 +104,7 @@ export const acknowledgeAlert = async (req: AuthenticatedRequest, res: any): Pro
 
     const response: ApiResponse<AlertType> = {
       success: true,
-      data: updatedAlert,
+      data: convertAlertRecordToAlert(updatedAlert),
       message: 'Alert acknowledged successfully'
     };
 
@@ -130,7 +140,7 @@ export const resolveAlert = async (req: AuthenticatedRequest, res: any): Promise
 
     const response: ApiResponse<AlertType> = {
       success: true,
-      data: updatedAlert,
+      data: convertAlertRecordToAlert(updatedAlert),
       message: 'Alert resolved successfully'
     };
 
@@ -187,7 +197,7 @@ export const getLowStockAlerts = async (req: AuthenticatedRequest, res: any): Pr
 
     const response: ApiResponse<AlertType[]> = {
       success: true,
-      data: alerts
+      data: convertAlertRecordsToAlerts(alerts)
     };
 
     res.json(response);
@@ -210,7 +220,7 @@ export const getExpiryAlerts = async (req: AuthenticatedRequest, res: any): Prom
 
     const response: ApiResponse<AlertType[]> = {
       success: true,
-      data: alerts
+      data: convertAlertRecordsToAlerts(alerts)
     };
 
     res.json(response);
@@ -277,7 +287,7 @@ export const createAlert = async (req: AuthenticatedRequest, res: any): Promise<
 
     const response: ApiResponse<AlertType> = {
       success: true,
-      data: alert,
+      data: convertAlertRecordToAlert(alert),
       message: 'Alert created successfully'
     };
 

@@ -12,11 +12,12 @@ export interface UploadResult {
   success: boolean;
   url?: string;
   key?: string;
+  presignedUrl?: string;
   error?: string;
 }
 
 export class S3Service {
-  private static readonly BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME 
+  private static readonly BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || 'default-bucket' 
 
   /**
    * Upload file to S3
@@ -32,7 +33,7 @@ export class S3Service {
       const key = `${folder}/${fileName}`;
 
       const uploadParams = {
-        Bucket: this.BUCKET_NAME,
+        Bucket: this.BUCKET_NAME!,
         Key: key,
         Body: file.buffer,
         ContentType: file.mimetype
@@ -63,7 +64,7 @@ export class S3Service {
   static async deleteFile(key: string): Promise<UploadResult> {
     try {
       await s3.deleteObject({
-        Bucket: this.BUCKET_NAME,
+        Bucket: this.BUCKET_NAME!,
         Key: key
       }).promise();
 

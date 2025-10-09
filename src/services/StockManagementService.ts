@@ -32,6 +32,85 @@ export interface StockValidationResult {
 
 export class StockManagementService {
   /**
+   * Get stock summary for a product
+   */
+  static async getStockSummary(productId: string): Promise<any> {
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    const stockInfo = await Product.getStockLevel(productId);
+    const batches = await Batch.findByProductId(productId);
+    const recentMovements = await StockMovement.findByProductId(productId, 10);
+
+    return {
+      product: product,
+      stock_info: stockInfo,
+      batches: batches,
+      recent_movements: recentMovements
+    };
+  }
+
+  /**
+   * Get expiring batches
+   */
+  static async getExpiringBatches(days: number = 30): Promise<any[]> {
+    return await Batch.getExpiringBatches(days);
+  }
+
+  /**
+   * Get low stock products
+   */
+  static async getLowStockProducts(): Promise<any[]> {
+    const products = await Product.findAll();
+    const lowStockProducts = [];
+
+    for (const product of products) {
+      const stockInfo = await Product.getStockLevel(product.id);
+      if (stockInfo && stockInfo.current_stock <= product.min_stock_level) {
+        lowStockProducts.push({
+          ...product,
+          stock_info: stockInfo
+        });
+      }
+    }
+
+    return lowStockProducts;
+  }
+
+  /**
+   * Get batch details
+   */
+  static async getBatchDetails(batchId: string): Promise<any> {
+    const batch = await Batch.findById(batchId);
+    if (!batch) {
+      throw new Error('Batch not found');
+    }
+
+    const movements = await StockMovement.findByBatchId(batchId);
+    return {
+      ...batch,
+      movements: movements
+    };
+  }
+
+  /**
+   * Check stock availability
+   */
+  static async checkStockAvailability(productId: string, batchId?: string, quantity: number = 1): Promise<boolean> {
+    const validation = await this.validateStockAvailability(productId, quantity, batchId);
+    return validation.isValid;
+  }
+
+  /**
+   * Create stock movement
+   */
+  static async createStockMovement(movementData: any): Promise<any> {
+    return await StockMovement.create(movementData);
+  }
+
+  /**
    * Reserve stock for a pending transaction
    */
   static async reserveStock(reservation: StockReservation): Promise<string> {
@@ -117,7 +196,6 @@ export class StockManagementService {
 
       // Create stock movement record
       await StockMovement.create({
-        id: uuidv4(),
         product_id: operation.productId,
         batch_id: operation.batchId,
         movement_type: this.getMovementType(operation.operationType),
@@ -191,14 +269,16 @@ export class StockManagementService {
       }
 
       // Check batch expiry
-      const expiryDate = new Date(batch.expiry_date);
-      const today = new Date();
-      const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (batch) {
+        const expiryDate = new Date(batch.expiry_date);
+        const today = new Date();
+        const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       
-      if (daysUntilExpiry <= 0) {
-        errors.push('Batch has expired');
-      } else if (daysUntilExpiry <= 30) {
-        warnings.push(`Batch expires in ${daysUntilExpiry} days`);
+        if (daysUntilExpiry <= 0) {
+          errors.push('Batch has expired');
+        } else if (daysUntilExpiry <= 30) {
+          warnings.push(`Batch expires in ${daysUntilExpiry} days`);
+        }
       }
     }
 
