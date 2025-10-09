@@ -22,7 +22,6 @@ export const auth = betterAuth({
     twoFactor({
       otpOptions: {
         async sendOTP({ user, otp }) {
-          console.log('🔐 sendOTP called for user:', user.email, 'with OTP:', otp);
           try {
             await sendEmail({
               sendTo: user.email,
@@ -52,7 +51,6 @@ export const auth = betterAuth({
                 </div>
               `,
             });
-            console.log('✅ OTP email sent successfully to:', user.email);
           } catch (error) {
             console.error('❌ Failed to send OTP email:', error);
             throw error;
@@ -137,16 +135,16 @@ export const auth = betterAuth({
       });
     },
   },
-  socialProviders: {
-    microsoft: {
-      clientId: process.env.MICROSOFT_CLIENT_ID as string,
-      clientSecret: process.env.MICROSOFT_CLIENT_SECRET as string,
-    },
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    }
-  },
+  // socialProviders: {
+  //   microsoft: {
+  //     clientId: process.env.MICROSOFT_CLIENT_ID as string,
+  //     clientSecret: process.env.MICROSOFT_CLIENT_SECRET as string,
+  //   },
+  //   google: {
+  //     clientId: process.env.GOOGLE_CLIENT_ID as string,
+  //     clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+  //   }
+  // },
 });
 
 export type User = typeof auth.$Infer.Session.user;
