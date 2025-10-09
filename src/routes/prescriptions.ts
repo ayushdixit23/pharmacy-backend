@@ -35,6 +35,13 @@ router.get('/:id',
     (req, res) => prescriptionController.getPrescriptionById(req, res)
 );
 
+// Get prescription medications (Pharmacist and Admin)
+router.get('/:id/medications',
+    authenticateUser,
+    requireAnyPermission(['read:prescriptions']),
+    (req, res) => prescriptionController.getPrescriptionMedications(req, res)
+);
+
 // Update prescription (Pharmacist and Admin)
 router.put('/:id',
     authenticateUser,

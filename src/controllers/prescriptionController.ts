@@ -200,6 +200,27 @@ export class PrescriptionController {
   }
 
   /**
+   * Get prescription medications
+   */
+  async getPrescriptionMedications(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const medications = await this.prescriptionService.prescriptionModel.getMedications(id);
+
+      res.json({
+        success: true,
+        data: medications
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch prescription medications'
+      });
+    }
+  }
+
+  /**
    * Update prescription
    */
   async updatePrescription(req: AuthenticatedRequest, res: Response): Promise<void> {

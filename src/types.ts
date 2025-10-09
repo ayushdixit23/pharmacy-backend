@@ -46,6 +46,7 @@ export interface CreateProductRequest {
   description?: string;
   generic_name?: string;
   manufacturer?: string;
+  image_url?: string;
   barcode?: string;
   qr_code?: string;
   category: string;
@@ -65,6 +66,7 @@ export interface UpdateProductRequest {
   generic_name?: string;
   manufacturer?: string;
   barcode?: string;
+  image_url?: string;
   qr_code?: string;
   category?: string;
   unit_price?: number;

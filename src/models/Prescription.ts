@@ -1,4 +1,5 @@
 import { Knex } from 'knex';
+import { randomUUID } from 'crypto';
 
 export interface Prescription {
   id: string;
@@ -345,14 +346,57 @@ export class PrescriptionModel {
   }
 
   async createMedications(prescriptionId: string, medications: CreatePrescriptionMedicationRequest[]): Promise<void> {
-    const medicationData = medications.map(med => ({
-      id: this.generateId(),
-      prescription_id: prescriptionId,
-      ...med,
-      is_dispensed: false
-    }));
+    if (medications.length === 0) return;
 
-    await this.db('prescription_medications').insert(medicationData);
+    console.log(`Creating ${medications.length} medications for prescription ${prescriptionId}`);
+
+    // First, clean up any existing medications for this prescription to avoid conflicts
+    await this.db('prescription_medications')
+      .where('prescription_id', prescriptionId)
+      .del();
+
+    // Insert medications one by one to avoid any potential ID conflicts
+    for (let i = 0; i < medications.length; i++) {
+      const med = medications[i];
+      const medicationId = this.generateId();
+      
+      console.log(`Creating medication ${i + 1}/${medications.length} with ID: ${medicationId}`);
+      
+      // Remove any existing id field from the medication data to prevent conflicts
+      const { id: existingId, ...medWithoutId } = med as any;
+      
+      if (existingId) {
+        console.log(`Removed existing ID from medication data: ${existingId}`);
+      }
+      
+      const medicationData = {
+        id: medicationId,
+        prescription_id: prescriptionId,
+        ...medWithoutId,
+        is_dispensed: false
+      };
+      
+      console.log(`Final medication data ID: ${medicationData.id}`);
+
+      try {
+        // Check if ID already exists (shouldn't happen with UUID, but just in case)
+        const existingMedication = await this.db('prescription_medications')
+          .where('id', medicationId)
+          .first();
+        
+        if (existingMedication) {
+          console.warn(`ID ${medicationId} already exists, generating new ID`);
+          medicationData.id = this.generateId();
+        }
+
+        await this.db('prescription_medications').insert(medicationData);
+        console.log(`Successfully created medication ${i + 1} with ID: ${medicationData.id}`);
+      } catch (error) {
+        console.error(`Failed to create medication ${i + 1}:`, error);
+        console.error('Medication data:', medicationData);
+        throw error;
+      }
+    }
   }
 
   async getAuditLogs(prescriptionId: string): Promise<PrescriptionAuditLog[]> {
@@ -411,7 +455,104 @@ export class PrescriptionModel {
     return `${prefix}${String(sequence).padStart(4, '0')}`;
   }
 
+  /**
+   * Get prescription statistics
+   */
+  async getStats(filters: any = {}): Promise<any> {
+    try {
+      const baseQuery = this.db('prescriptions').where('is_active', true);
+      
+      // Apply date filters if provided
+      if (filters.date_from) {
+        baseQuery.where('created_at', '>=', filters.date_from);
+      }
+      if (filters.date_to) {
+        baseQuery.where('created_at', '<=', filters.date_to);
+      }
+
+      // Get total prescriptions
+      const totalPrescriptions = await baseQuery.clone().count('* as count').first();
+      
+      // Get status counts
+      const statusCounts = await baseQuery.clone()
+        .select('status')
+        .count('* as count')
+        .groupBy('status');
+
+      // Get validation status counts
+      const validationCounts = await baseQuery.clone()
+        .select('validation_status')
+        .count('* as count')
+        .groupBy('validation_status');
+
+      // Get today's uploads
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayUploads = await this.db('prescriptions')
+        .where('is_active', true)
+        .where('created_at', '>=', today)
+        .count('* as count')
+        .first();
+
+      // Get this week's uploads
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+      const thisWeekUploads = await this.db('prescriptions')
+        .where('is_active', true)
+        .where('created_at', '>=', weekStart)
+        .count('* as count')
+        .first();
+
+      // Get this month's uploads
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+      const thisMonthUploads = await this.db('prescriptions')
+        .where('is_active', true)
+        .where('created_at', '>=', monthStart)
+        .count('* as count')
+        .first();
+
+      // Format status counts
+      const statusStats = statusCounts.reduce((acc: any, stat: any) => {
+        acc[stat.status.toLowerCase()] = parseInt(stat.count);
+        return acc;
+      }, {});
+
+      // Format validation counts
+      const validationStats = validationCounts.reduce((acc: any, stat: any) => {
+        acc[stat.validation_status.toLowerCase()] = parseInt(stat.count);
+        return acc;
+      }, {});
+
+      return {
+        total_prescriptions: parseInt(totalPrescriptions?.count as string) || 0,
+        pending_validation: statusStats.pending_validation || 0,
+        validated: statusStats.validated || 0,
+        dispensed: statusStats.dispensed || 0,
+        rejected: statusStats.rejected || 0,
+        today_uploads: parseInt(todayUploads?.count as string) || 0,
+        this_week_uploads: parseInt(thisWeekUploads?.count as string) || 0,
+        this_month_uploads: parseInt(thisMonthUploads?.count as string) || 0
+      };
+    } catch (error) {
+      console.error('Error fetching prescription stats:', error);
+      throw error;
+    }
+  }
+
   private generateId(): string {
-    return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+    try {
+      return randomUUID();
+    } catch (error) {
+      // Fallback to timestamp-based ID if UUID generation fails
+      console.warn('UUID generation failed, using fallback method:', error);
+      const timestamp = Date.now().toString(36);
+      const randomPart1 = Math.random().toString(36).substr(2, 9);
+      const randomPart2 = Math.random().toString(36).substr(2, 9);
+      const randomPart3 = Math.random().toString(36).substr(2, 9);
+      return `${timestamp}_${randomPart1}_${randomPart2}_${randomPart3}`;
+    }
   }
 }

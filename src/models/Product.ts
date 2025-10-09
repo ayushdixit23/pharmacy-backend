@@ -9,6 +9,8 @@ interface ProductData {
   manufacturer?: string;
   unit: string;
   hsn_code: string;
+  qr_code?: string;
+  image_url?: string;
   gst_rate: number;
   price: number;
   barcode?: string;
@@ -37,6 +39,7 @@ interface ProductRecord {
   gst_rate: number;
   price: number;
   barcode?: string;
+  image_url?: string;
   supplier_id: string;
   min_stock_level: number;
   max_stock_level?: number;
