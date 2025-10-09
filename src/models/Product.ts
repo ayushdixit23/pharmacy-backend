@@ -1,23 +1,26 @@
 import db from '../db/knex.js';
 
 interface ProductData {
-  sku: string;
+  id?: string;
   name: string;
   generic_name?: string;
   description?: string;
   category: string;
   manufacturer?: string;
-  unit: string;
-  hsn_code: string;
+  unit_of_measure: string;
   qr_code?: string;
   image_url?: string;
-  gst_rate: number;
-  price: number;
+  unit_price: number;
+  selling_price: number;
+  pack_size?: number;
   barcode?: string;
-  supplier_id: string;
-  min_stock_level: number;
+  supplier_id?: string;
+  min_stock_level?: number;
   max_stock_level?: number;
+  requires_prescription?: boolean;
   is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface ProductFilters {
@@ -28,21 +31,22 @@ interface ProductFilters {
 
 interface ProductRecord {
   id: string;
-  sku: string;
   name: string;
   generic_name?: string;
   description?: string;
   category: string;
   manufacturer?: string;
-  unit: string;
-  hsn_code: string;
-  gst_rate: number;
-  price: number;
+  unit_of_measure: string;
+  unit_price: number;
+  selling_price: number;
+  pack_size?: number;
   barcode?: string;
+  qr_code?: string;
   image_url?: string;
-  supplier_id: string;
+  supplier_id?: string;
   min_stock_level: number;
   max_stock_level?: number;
+  requires_prescription: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -56,7 +60,7 @@ interface StockLevel {
 }
 
 class Product {
-  static async create(productData: Product): Promise<ProductRecord> {
+  static async create(productData: ProductData): Promise<ProductRecord> {
     const [product] = await db('products')
       .insert(productData)
       .returning('*');
