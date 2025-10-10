@@ -101,12 +101,11 @@ export interface Batch {
   batch_number: string;
   product_id: string;
   supplier_id: string;
-  mfg_date: string;
+  manufacturing_date: string;
   expiry_date: string;
   initial_quantity: number;
   current_quantity: number;
   cost_price: number;
-  selling_price: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -131,11 +130,12 @@ export interface StockMovement {
 export interface Supplier {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  gst_number: string;
-  contact_person: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  gst_number?: string;
+  license_number?: string;
+  contact_person?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -189,22 +189,19 @@ export interface CreateBatchRequest {
   batch_number: string;
   product_id: string;
   supplier_id: string;
-  mfg_date: string;
+  manufacturing_date: string;
   expiry_date: string;
   initial_quantity: number;
   cost_price: number;
-  selling_price: number;
   lot_number?: string;
-  manufacturing_date?: string;
   notes?: string;
 }
 
 export interface UpdateBatchRequest {
   batch_number?: string;
-  mfg_date?: string;
+  manufacturing_date?: string;
   expiry_date?: string;
   cost_price?: number;
-  selling_price?: number;
 }
 
 export interface UpdateBatchQuantityRequest {
@@ -223,11 +220,11 @@ export interface BatchFilters {
 // Supplier Request Types
 export interface CreateSupplierRequest {
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  gst_number: string;
-  contact_person: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  gst_number?: string;
+  contact_person?: string;
   license_number?: string;
 }
 
@@ -238,6 +235,7 @@ export interface UpdateSupplierRequest {
   address?: string;
   gst_number?: string;
   contact_person?: string;
+  license_number?: string;
 }
 
 export interface SupplierFilters {

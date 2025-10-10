@@ -19,6 +19,7 @@ import alertRoutes from './routes/alerts.js';
 import inventoryRoutes from './routes/inventory.js';
 import prescriptionRoutes from './routes/prescriptions.js';
 import uploadRoutes from './routes/upload.js';
+import salesRoutes from './routes/sales.js';
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -114,6 +115,7 @@ app.use("/api/alerts", alertRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/sales", salesRoutes);
 
 // 404 Handler for non-existent routes (must come after routes)
 app.use((_, res) => {

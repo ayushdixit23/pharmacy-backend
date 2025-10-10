@@ -2,11 +2,12 @@ import db from '../db/knex.js';
 
 interface SupplierData {
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  gst_number: string;
-  contact_person: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  gst_number?: string;
+  license_number?: string;
+  contact_person?: string;
   is_active?: boolean;
 }
 
@@ -17,11 +18,12 @@ interface SupplierFilters {
 interface SupplierRecord {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  gst_number: string;
-  contact_person: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  gst_number?: string;
+  license_number?: string;
+  contact_person?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;

@@ -190,15 +190,23 @@ export const getProductById = async (req: AuthenticatedRequest, res: any): Promi
       return;
     }
 
-    // Get stock information
+    // Get stock information (optional - might not exist for new products)
     const stockInfo = await Product.getStockLevel(id);
     const batches = await Batch.findByProductId(id);
+
+    // Create default stock info if none exists
+    const defaultStockInfo: StockInfo = {
+      current_stock: 0,
+      reserved_stock: 0,
+      min_stock_level: product.min_stock_level,
+      max_stock_level: product.max_stock_level || 1000
+    };
 
     const response: ApiResponse<ProductType & { stock_info: StockInfo; batches: BatchType[] }> = {
       success: true,
       data: {
         ...convertProductRecordToProduct(product),
-        stock_info: convertStockLevelToStockInfo(stockInfo!),
+        stock_info: stockInfo ? convertStockLevelToStockInfo(stockInfo) : defaultStockInfo,
         batches
       }
     };
@@ -314,15 +322,23 @@ export const getProductByBarcode = async (req: AuthenticatedRequest, res: any): 
       return;
     }
 
-    // Get stock information
+    // Get stock information (optional - might not exist for new products)
     const stockInfo = await Product.getStockLevel(product.id);
     const batches = await Batch.findByProductId(product.id);
+
+    // Create default stock info if none exists
+    const defaultStockInfo: StockInfo = {
+      current_stock: 0,
+      reserved_stock: 0,
+      min_stock_level: product.min_stock_level,
+      max_stock_level: product.max_stock_level || 1000
+    };
 
     const response: ApiResponse<ProductType & { stock_info: StockInfo; batches: BatchType[] }> = {
       success: true,
       data: {
         ...convertProductRecordToProduct(product),
-        stock_info: convertStockLevelToStockInfo(stockInfo!),
+        stock_info: stockInfo ? convertStockLevelToStockInfo(stockInfo) : defaultStockInfo,
         batches
       }
     };

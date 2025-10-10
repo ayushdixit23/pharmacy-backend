@@ -55,7 +55,8 @@ export const createSupplier = async (req: AuthenticatedRequest, res: any): Promi
       email,
       phone,
       address,
-      gst_number
+      gst_number,
+      license_number
     };
 
     const supplier = await Supplier.create(supplierData);

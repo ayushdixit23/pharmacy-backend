@@ -1,15 +1,15 @@
 import db from '../db/knex.js';
 
 interface BatchData {
+  id: string;
   batch_number: string;
   product_id: string;
   supplier_id: string;
-  mfg_date: Date;
+  manufacturing_date: Date;
   expiry_date: Date;
   initial_quantity: number;
   current_quantity: number;
   cost_price: number;
-  selling_price: number;
   is_active?: boolean;
 }
 
@@ -18,12 +18,11 @@ interface BatchRecord {
   batch_number: string;
   product_id: string;
   supplier_id: string;
-  mfg_date: string;
+  manufacturing_date: string;
   expiry_date: string;
   initial_quantity: number;
   current_quantity: number;
   cost_price: number;
-  selling_price: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;

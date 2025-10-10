@@ -150,6 +150,7 @@ export const updateStockByBarcode = async (req: AuthenticatedRequest, res: any):
 
     // Create stock movement record
     await StockMovement.create({
+      id: uuidv4(),
       product_id: product.id,
       batch_id: batch_id || '',
       movement_type,

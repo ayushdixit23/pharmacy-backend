@@ -1,14 +1,14 @@
 import db from '../db/knex.js';
 
 interface StockMovementData {
+  id: string;
   product_id: string;
   batch_id?: string;
   movement_type: 'IN' | 'OUT' | 'ADJUSTMENT' | 'TRANSFER';
   quantity: number;
   reason?: string;
   user_id?: string;
-  reference_id?: string;
-  reference_type?: string;
+  reference_number?: string;
 }
 
 interface StockMovementFilters {
